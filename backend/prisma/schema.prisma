@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      String
+  name      String
+  createdAt DateTime @default(now())
+  doctor    Doctor?
+}
+
+model Patient {
+  id             Int              @id @default(autoincrement())
+  name           String
+  email          String?
+  phone          String?
+  dob            DateTime?
+  createdAt      DateTime         @default(now())
+  appointments   Appointment[]
+  medicalHistory MedicalHistory[]
+  queueTokens    QueueToken[]
+}
+
+model Doctor {
+  id           Int           @id @default(autoincrement())
+  name         String
+  specialty    String
+  email        String        @unique
+  userId       Int           @unique
+  user         User          @relation(fields: [userId], references: [id])
+  slots        Slot[]
+  appointments Appointment[]
+}
+
+model Slot {
+  id          Int          @id @default(autoincrement())
+  doctorId    Int
+  doctor      Doctor       @relation(fields: [doctorId], references: [id])
+  startTime   DateTime
+  endTime     DateTime
+  isBooked    Boolean      @default(false)
+  appointment Appointment?
+
+  @@unique([doctorId, startTime])
+}
+
+model Appointment {
+  id        Int        @id @default(autoincrement())
+  patientId Int
+  doctorId  Int
+  slotId    Int        @unique
+  status    String     @default("scheduled")
+  createdAt DateTime   @default(now())
+  patient   Patient    @relation(fields: [patientId], references: [id])
+  doctor    Doctor     @relation(fields: [doctorId], references: [id])
+  slot      Slot       @relation(fields: [slotId], references: [id])
+  queueToken QueueToken?
+}
+
+model QueueToken {
+  id            Int         @id @default(autoincrement())
+  tokenNumber   Int
+  patientId     Int
+  appointmentId Int         @unique
+  status        String      @default("waiting")
+  createdAt     DateTime    @default(now())
+  patient       Patient     @relation(fields: [patientId], references: [id])
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+}
+
+model MedicalHistory {
+  id        Int      @id @default(autoincrement())
+  patientId Int
+  notes     String?
+  diagnosis String?
+  createdAt DateTime @default(now())
+  patient   Patient  @relation(fields: [patientId], references: [id])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+}

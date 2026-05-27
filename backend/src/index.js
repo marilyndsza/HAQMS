@@ -13,7 +13,7 @@ const queueRoutes = require('./routes/queue');
 const reportRoutes = require('./routes/reports');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Enable CORS for all origins (weak/broad CORS config)
 app.use(cors());
